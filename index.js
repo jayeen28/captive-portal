@@ -23,7 +23,7 @@ app.get('/captive', async (req, res) => {
     try {
         res.send(`
         <form method="POST" action="/submit">
-            <label>Facebook URL:</label>
+            <label>Facebook ID link:</label>
             <input type="url" name="fburl" required>
                 <button type="submit">Submit</button>
         </form>
