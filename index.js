@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const { exec } = require('child_process');
 
 const db = require('./db');
+const User = require('./db/models/user.model');
 
 const app = express();
 const PORT = 8080;
@@ -37,7 +38,7 @@ app.get('/captive', async (req, res) => {
 app.use(async (req, res, next) => {
     const url = req.originalUrl;
     const isCap = CAPTIVE_PATHNAMES.some(path => url === path);
-    console.log(url, isCap);
+
     if (isCap) res.redirect('/captive');
     else next();
 });
@@ -61,10 +62,17 @@ app.post('/submit', async (req, res) => {
         console.log(`Allowing access to: ${ip}, Facebook: ${fburl}`);
 
         // Allow internet access for this mac
-        exec(`sudo iptables -I FORWARD -m mac --mac-source ${mac} -j ACCEPT`, (err, stdout, stderr) => {
+        exec(`sudo iptables -I FORWARD -m mac --mac-source ${mac} -j ACCEPT`, async (err, stdout, stderr) => {
             if (err) {
                 console.error(`Error allowing MAC: ${stderr}`);
                 return res.status(500).send("Failed to allow access.");
+            }
+
+            // Check if user already exists
+            let user = await User.findOne({ mac });
+            if (!user) {
+                user = new User({ mac, facebook: fburl });
+                await user.save();
             }
 
             return res.status(200).send(`<p>Thank you! Internet access granted. You may now use the internet.</p>`);

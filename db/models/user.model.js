@@ -9,7 +9,6 @@ const userSchema = new Schema({
     facebook: {
         type: String,
         required: true,
-        unique: true,
     }
 }, { timestamps: true });
 
